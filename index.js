@@ -34,6 +34,7 @@ app.use("/api/v1/notices", noticeRoutes);
 //event-routes
 app.use("/api/v1/events", eventRoutes);
 
+
 //listening server
 const PORT = process.env.PORT || 5000;
 
