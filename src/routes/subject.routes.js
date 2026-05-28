@@ -3,9 +3,17 @@ import { authorizeRoles } from "../middlewares/role.middleware";
 
 import { authUser } from "../middlewares/auth.middleware.js";
 import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
-import { createSubjectValidationSchema } from "../validations/subject.validation.js";
+import {
+  createSubjectValidationSchema,
+  updateSubjectValidationSchema,
+} from "../validations/subject.validation.js";
 
-import { createSubject } from "../controller/subject.controller.js";
+import {
+  createSubject,
+  deleteSubject,
+  getAllSubjects,
+  updateSubject,
+} from "../controller/subject.controller.js";
 
 const router = express.Router();
 
@@ -17,3 +25,23 @@ router.post(
   validationMiddlewareFactory(createSubjectValidationSchema),
   createSubject,
 );
+
+// get all subjects
+
+router.get("/", authUser, getAllSubjects);
+
+// get single subject
+
+router.get(
+  "/:subjectId",
+  authUser,
+  authorizeRoles("admin", "superAdmin", "faculty"),
+  validationMiddlewareFactory(updateSubjectValidationSchema),
+  updateSubject,
+);
+
+// delete subject
+
+router.delete("/:subjectId", authUser, authorizeRoles("admin","superAdmin"), deleteSubject);
+
+export default router;
