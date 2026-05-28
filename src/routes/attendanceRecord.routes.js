@@ -1,15 +1,20 @@
 import express from "express";
-import { authUser } from "../middlewares/auth.middleware.js";
+import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
 import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
 import {
+  bulkDeleteAttendance,
+  bulkUpdateAttendance,
+  deleteAttendanceRecord,
   getSessionAttendance,
-  getStudentAttendance,
+  getStudentAttendanceSummary,
   markAttendance,
-  updateAttendance,
+  updateAttendanceRecord,
 } from "../controller/attendanceRecord.controller.js";
 import {
-  bulkAttendanceValidationSchema,
+  bulkDeleteAttendanceValidationSchema,
+  bulkUpdateAttendanceValidationSchema,
   markAttendanceValidationSchema,
+  updateAttendanceRecordValidationSchema,
 } from "../validations/attendanceRecord.validation.js";
 import { authorizeRoles } from "../middlewares/role.middleware.js";
 
@@ -24,28 +29,46 @@ router.post(
   markAttendance,
 );
 
-//bulk mark attendance
-router.post(
-  "/bulk/:sessionId",
-  authUser,
-  authorizeRoles("faculty", "admin", "superAdmin"),
-  validationMiddlewareFactory(bulkAttendanceValidationSchema),
-  bulkMarkAttendance,
-);
-
 //get session attendance
 
 router.get("/session/:sessionId", authUser, getSessionAttendance);
 
-// get student atendance
-router.get("/student/:studentId", authUser, getStudentAttendance);
+// get student atendance Summary
+router.get("/student/:studentId", authUser, getStudentAttendanceSummary);
 
 //update attendance
-router.put(
+router.patch(
+  "/update/:recordId",
+  authUser,
+  authorizeRoles("faculty", "admin", "superAdmin"),
+  validationMiddlewareFactory(updateAttendanceRecordValidationSchema),
+  updateAttendanceRecord,
+);
+
+//bulk update routes
+router.patch(
+  "/bulk-update",
+  authUser,
+  authorizeRoles("faculty", "admin", "superAdmin"),
+  validationMiddlewareFactory(bulkUpdateAttendanceValidationSchema),
+  bulkUpdateAttendance,
+);
+
+// delete Attendance Record routes
+router.delete(
   "/:recordId",
   authUser,
   authorizeRoles("faculty", "admin", "superAdmin"),
-  updateAttendance,
+  deleteAttendanceRecord,
+);
+
+// bulk delete routes
+router.delete(
+  "/bulk/delete",
+  authUser,
+  authorizeRoles("admin", "superAdmin"),
+  validationMiddlewareFactory(bulkDeleteAttendanceValidationSchema),
+  bulkDeleteAttendance,
 );
 
 export default router;

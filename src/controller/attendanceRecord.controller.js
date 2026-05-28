@@ -1,57 +1,14 @@
 import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
+
 import { AttendanceRecord } from "../models/attendanceRecord.model.js";
+
 import { AttendanceSession } from "../models/attendanceSession.model.js";
+
 import { AppError } from "../utils/AppError.js";
 
-//mark single attendance
+// mark attendance
 
 export const markAttendance = asyncHandler(async (req, res) => {
-  const { sessionId } = req.params;
-
-  const { student, status, remarks } = req.body;
-
-  const session = await AttendanceSession.findById(sessionId);
-
-  if (!session) {
-    throw new AppError(404, "Attendance session not found");
-  }
-
-  const alreadyMarked = await AttendanceRecord.findOne({
-    session: sessionId,
-    student,
-  });
-
-  if (alreadyMarked) {
-    throw new AppError(400, "Attendance already marked");
-  }
-
-  const record = await AttendanceRecord.create({
-    session: sessionId,
-    student,
-    status,
-    remarks,
-    markedBy: req.user._id,
-  });
-
-  // statistics update
-  if (status === "present" || "late") {
-    session.totalPresent += 1;
-  } else {
-    session.totalAbsent += 1;
-  }
-
-  await session.save();
-
-  return res.status(201).json({
-    success: true,
-    message: "Attendance marked successfully",
-    record,
-  });
-});
-
-// bulk attendance
-
-export const bulkMarkAttendance = asyncHandler(async (req, res) => {
   const { sessionId } = req.params;
 
   const { records } = req.body;
@@ -62,111 +19,320 @@ export const bulkMarkAttendance = asyncHandler(async (req, res) => {
     throw new AppError(404, "Attendance session not found");
   }
 
-  let totalPresent = 0;
+  // session validation
 
-  let totalAbsent = 0;
-  const insertedRecords = [];
+  if (session.status === "cancelled") {
+    throw new AppError(400, "Cannot mark attendance for cancelled session");
+  }
 
-  for (const item of records) {
-    const exists = await AttendanceRecord.findOne({
+  let presentCount = 0;
+
+  let absentCount = 0;
+
+  // process attendance
+
+  for (const record of records) {
+    const existingRecord = await AttendanceRecord.findOne({
       session: sessionId,
-      student: item.student,
+      student: record.student,
     });
 
-    if (exists) {
-      continue;
+    // update existing record
+
+    if (existingRecord) {
+      existingRecord.status = record.status;
+
+      existingRecord.remarks = record.remarks || "";
+
+      existingRecord.markedBy = req.user._id;
+
+      await existingRecord.save();
+    } else {
+      await AttendanceRecord.create({
+        session: sessionId,
+
+        student: record.student,
+
+        status: record.status,
+
+        remarks: record.remarks || "",
+
+        markedBy: req.user._id,
+      });
     }
 
-    const record = await AttendanceRecord.create({
-      session: sessionId,
-      student: item.student,
-      status: item.status,
-      remarks: item.remarks,
-      markedBy: req.user._id,
-    });
+    // count present/absent
 
-    insertedRecords.push(record);
-
-    if(item.status ==="present" || item.status ==="late"){
-        totalPresent++;
-    }else{
-        totalAbsent++;
+    if (record.status === "present" || record.status === "late") {
+      presentCount++;
+    } else {
+      absentCount++;
     }
   }
 
-  session.totalPresent += totalPresent;
+  // update session stats
 
-  session.totalAbsent +=totalAbsent;
+  session.totalPresent = presentCount;
+
+  session.totalAbsent = absentCount;
+
+  session.status = "completed";
 
   await session.save();
 
-  return res.status(201).json({
-    success:true,
-    message:"Bulk attendance marked successfully",
+  return res.status(200).json({
+    success: true,
 
-    totalInserted : insertedRecords.length,
-    records: insertedRecords,
+    message: "Attendance marked successfully",
+
+    totalPresent: presentCount,
+
+    totalAbsent: absentCount,
   });
 });
 
+// get session attendance
 
-//get session attendance
-export const getSessionAttendance = asyncHandler(async (req,res)=>{
-    const records = await AttendanceRecord.find({
-        session:req.params.sessionId,
-    })
-    .populate("student","fullname rollNumber")
-    .populate("markedBy","fullname");
+export const getSessionAttendance = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
 
-    return res.status(200).json({
-        success:true,
-        count :records.length,
-        records,
-    });
+  const session = await AttendanceSession.findById(sessionId)
+    .populate("subject", "name code")
+    .populate("section", "name");
+
+  if (!session) {
+    throw new AppError(404, "Attendance session not found");
+  }
+
+  const attendance = await AttendanceRecord.find({
+    session: sessionId,
+  })
+    .populate("student", "fullname rollNumber email")
+    .populate("markedBy", "fullname role");
+
+  return res.status(200).json({
+    success: true,
+
+    session,
+
+    attendance,
+  });
 });
 
+// get student attendance summary
 
-// get student attendance
+export const getStudentAttendanceSummary = asyncHandler(async (req, res) => {
+  const { studentId } = req.params;
 
-export const getStudentAttendance = asyncHandler(async (req,res)=>{
-    const records = await AttendanceRecord.find({
-        student: req.params.studentId,
-    }).populate({
-        path:"session",
-        populate:{
-            path:"subject",
+  const records = await AttendanceRecord.find({
+    student: studentId,
+  }).populate({
+    path: "session",
+    populate: {
+      path: "subject",
+      select: "name code",
+    },
+  });
 
-            select:
-            "name code",
-        },
-    });
+  if (!records.length) {
+    throw new AppError(404, "No attendance records found");
+  }
 
-    return res.status(200).json({
-        success: true,
-        count : records.length,
-        records,
-    })
-});
+  let totalClasses = 0;
 
+  let totalPresent = 0;
 
-// update attendance 
+  let totalAbsent = 0;
 
-export const updateAttendance = asyncHandler( async (req,res)=>{
-    const { recordId } = req.params;
+  // subject wise stats
 
-    const record = await AttendanceRecord.findById(recordId);
+  const subjectStats = {};
 
-    if(!record){
-        throw new AppError(404,"Attendance record not found");
+  for (const record of records) {
+    totalClasses++;
+
+    const subject = record.session.subject;
+
+    const subjectId = subject._id.toString();
+
+    // create subject entry
+
+    if (!subjectStats[subjectId]) {
+      subjectStats[subjectId] = {
+        subjectName: subject.name,
+
+        subjectCode: subject.code,
+
+        totalClasses: 0,
+
+        totalPresent: 0,
+
+        totalAbsent: 0,
+      };
     }
 
-    record.status = req.body.status || record.status;
-    record.remarks = req.body.remarks || record.remarks;
+    subjectStats[subjectId].totalClasses++;
 
-    await record.save();
-    return res.status(200).json({
-        success:true,
-        message:"Attendance updated successfully",
-        record
-    })
-})
+    // attendance count
+
+    if (record.status === "present" || record.status === "late") {
+      totalPresent++;
+
+      subjectStats[subjectId].totalPresent++;
+    } else {
+      totalAbsent++;
+
+      subjectStats[subjectId].totalAbsent++;
+    }
+  }
+
+  // percentage calculation
+
+  const percentage =
+    totalClasses === 0 ? 0 : ((totalPresent / totalClasses) * 100).toFixed(2);
+
+  return res.status(200).json({
+    success: true,
+
+    totalClasses,
+
+    totalPresent,
+
+    totalAbsent,
+
+    attendancePercentage: percentage,
+
+    subjectWiseAttendance: Object.values(subjectStats),
+  });
+});
+
+// update attendance Record
+
+export const updateAttendanceRecord = asyncHandler(async (req, res) => {
+  const { recordId } = req.params;
+
+  const { status, remarks } = req.body;
+
+  const attendanceRecord = await AttendanceRecord.findById(recordId);
+
+  if (!attendanceRecord) {
+    throw new AppError(404, "Attendance record not found");
+  }
+
+  attendanceRecord.status = status || attendanceRecord.status;
+  attendanceRecord.remarks = remarks || attendanceRecord.remarks;
+  attendanceRecord.markedBy = req.user._id;
+
+  await attendanceRecord.save();
+
+  // recalculate session stats
+
+  const sessionRecords = await Attendance.find({
+    session: attendanceRecord.session,
+  });
+
+  let totalPresent = 0;
+  let totalAbsent = 0;
+  for (const record of sessionRecords) {
+    if (record.status === "present" || record.status === "late") {
+      totalPresent++;
+    } else {
+      totalAbsent++;
+    }
+  }
+
+  await AttendanceSession.findByIdAndUpdate(attendanceRecord.session, {
+    totalPresent,
+    totalAbsent,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Attendance record updated successfully",
+    attendanceRecord,
+  });
+});
+
+export const bulkUpdateAttendance = asyncHandler(async (req, res) => {
+  const { records } = req.body;
+  if (!records || !records.length) {
+    throw new AppError(400, "Records are required");
+  }
+
+  for (const item of records) {
+    const attendanceRecord = await AttendanceRecord.findById(item.recordId);
+
+    if (!attendanceRecord) {
+      continue;
+    }
+
+    attendanceRecord.status = item.status;
+    attendanceRecord.remarks = item.remarks || "";
+    attendanceRecord.markedBy = req.user._id;
+
+    await attendanceRecord.save();
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Bulk attendance updated successfully",
+  });
+});
+
+export const deleteAttendanceRecord = asyncHandler(async (req, res) => {
+  const { recordId } = req.params;
+
+  const attendanceRecord = await AttendanceRecord.findById(recordId);
+
+  if (!attendanceRecord) {
+    throw new AppError(404, "Attendance record not found");
+  }
+
+  const sessionId = attendanceRecord.session;
+
+  await attendanceRecord.deleteOne();
+
+  //recalculate totals
+  const records = await AttendanceRecord.find({
+    session: sessionId,
+  });
+
+  let totalPresent = 0;
+  let totalAbsent = 0;
+
+  for (const record of records) {
+    if (record.status === "present" || record.status === "late") {
+      totalPresent++;
+    } else {
+      totalAbsent++;
+    }
+  }
+  await AttendanceSession.findByIDAndUpdate(sessionId, {
+    totalPresent,
+    totalAbsent,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Attendance record deleted successfully",
+  });
+});
+
+export const bulkDeleteAttendance = asyncHandler(async (req, res) => {
+  const { recordIds } = req.body;
+
+  if (!recordIds || !recordIds.length) {
+    throw new AppError(400, "Record ids are required");
+  }
+
+  await AttendanceRecord.deleteMany({
+    _id: {
+      $in: recordIds,
+    },
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Bulk attendance records deleted successfully",
+  });
+});

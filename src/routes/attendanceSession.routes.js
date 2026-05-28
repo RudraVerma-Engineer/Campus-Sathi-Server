@@ -1,10 +1,10 @@
 import express from "express";
 
-import { authUser } from "../middlewares/auth.middleware.js";
-import { authorizeRoles } from "../middlewares/role.middleware.js";
+import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/role.middleware";
 import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
 import {
-  createAttendanceSessionValidation,
+  createAttendanceSessionValidationSchema,
   updateAttendanceSessionValidationSchema,
 } from "../validations/attendanceSession.validation.js";
 import {
@@ -13,29 +13,27 @@ import {
   getAllAttendanceSessions,
   getSingleAttendanceSession,
   updateAttendanceSession,
-} from "../controller/attendance.controller.js";
+} from "../controller/attendanceSession.controller.js";
 
 const router = express.Router();
 
-//create attendance session
+// create attendance session
 router.post(
   "/create",
   authUser,
   authorizeRoles("faculty", "admin", "superAdmin"),
-  validationMiddlewareFactory(createAttendanceSessionValidation),
+  validationMiddlewareFactory(createAttendanceSessionValidationSchema),
   createAttendanceSession,
 );
 
-//get all sessions
-
+// get all sessions
 router.get("/", authUser, getAllAttendanceSessions);
 
 // get single session
-
 router.get("/:sessionId", authUser, getSingleAttendanceSession);
 
 //update session
-router.put(
+router.patch(
   "/:sessionId",
   authUser,
   authorizeRoles("faculty", "admin", "superAdmin"),
@@ -43,12 +41,11 @@ router.put(
   updateAttendanceSession,
 );
 
-//delete session
-
+// delete session
 router.delete(
   "/:sessionId",
   authUser,
-  authorizeRoles("admin", "superAdmin"),
+  authorizeRoles("faculty", "admin", "superAdmin"),
   deleteAttendanceSession,
 );
 

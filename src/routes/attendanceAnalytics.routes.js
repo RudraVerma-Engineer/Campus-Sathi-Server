@@ -1,6 +1,6 @@
 import express from "express";
 import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
-import { getStudentAttendance } from "../controller/attendanceRecord.controller.js";
+import { getStudentAttendanceSummary } from "../controller/attendanceRecord.controller.js";
 import {
   getDefaulterStudents,
   getFacultyAttendanceStats,
@@ -11,7 +11,7 @@ import { authorizeRoles } from "../middlewares/role.middleware.js";
 const router = express.Router();
 
 //overall attendance
-router.get("/overall/:studentId", authUser, getStudentAttendance);
+router.get("/overall/:studentId", authUser, getStudentAttendanceSummary);
 
 //subject wise attendance
 router.get("/subject-wise/:studentId", authUser, getSubjectWiseAttendance);
