@@ -7,6 +7,8 @@ import connectDB from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import noticeRoutes from "./src/routes/notice.routes.js";
 import eventRoutes from "./src/routes/event.routes.js";
+import subjectRoutes from "./src/routes/subject.routes.js";
+import timetableRoutes from "./src/routes/timetable.routes.js";
 // dotenv.config();
 
 // db calling
@@ -33,6 +35,12 @@ app.use("/api/v1/notices", noticeRoutes);
 
 //event-routes
 app.use("/api/v1/events", eventRoutes);
+
+//subject-routes
+app.use("/api/v1/subject", subjectRoutes);
+
+//timetable-routes
+app.use("/api/v1/timetable",timetableRoutes);
 
 
 //listening server
