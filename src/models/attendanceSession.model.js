@@ -40,49 +40,62 @@ const attendanceSessionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    room:{
-        type:String,
-        trim:true,
+    room: {
+      type: String,
+      trim: true,
     },
-    building:{
-        type:String,
-        trim:true
+    building: {
+      type: String,
+      trim: true,
     },
 
     status: {
       type: String,
-      enum: ["scheduled", "active", "completed","cancelled"],
+      enum: ["scheduled", "active", "completed", "cancelled"],
       default: "scheduled",
     },
-    attendanceMode:{
-        type:String,
-        enum:["manual","qr","biometric"],
-        default:"manual",
+    attendanceMode: {
+      type: String,
+      enum: ["manual", "qr", "biometric"],
+      default: "manual",
     },
-    totalStudents:{
-        type:Number,
-        default:0,
+
+    qrToken: {
+      type: String,
     },
-    totalPresent:{
-        type:Number,
-        default:0,
+    qrExpiresAt: {
+      type: Date,
     },
-    totalAbsent:{
-        type:Number,
-        default:0,
+
+    qrEnabled: {
+      type: Boolean,
+      default: false,
     },
-    remarks:{
-        type:String,
-        trim:true,
+    
+    totalStudents: {
+      type: Number,
+      default: 0,
     },
-    createdBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true,
+    totalPresent: {
+      type: Number,
+      default: 0,
     },
-    sessionNumber:{
-        type:Number,
-    }
+    totalAbsent: {
+      type: Number,
+      default: 0,
+    },
+    remarks: {
+      type: String,
+      trim: true,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    sessionNumber: {
+      type: Number,
+    },
   },
   {
     timestamps: true,
@@ -110,7 +123,7 @@ attendanceSessionSchema.index({
   section: 1,
 });
 
-//duplicate session 
+//duplicate session
 attendanceSessionSchema.index(
   {
     timetable: 1,
@@ -121,7 +134,6 @@ attendanceSessionSchema.index(
     unique: true,
   },
 );
-
 
 export const AttendanceSession = mongoose.model(
   "AttendanceSession",

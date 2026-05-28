@@ -19,6 +19,14 @@ const timetableSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    department: {
+      type: String,
+      required: true,
+    },
+    semester: {
+      type: Number,
+      required: true,
+    },
     lectureType: {
       type: String,
       enum: ["lecture", "lab"],

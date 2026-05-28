@@ -56,5 +56,5 @@ export const bulkUpdateAttendanceValidationSchema = Joi.object({
 // bulk delete attendance validation schema
 
 export const bulkDeleteAttendanceValidationSchema = Joi.object({
-  recordIds: Joi.array.items(Joi.string().hex().length(24)).min(1).required(),
+  recordIds: Joi.array().items(Joi.string().hex().length(24)).min(1).required(),
 });

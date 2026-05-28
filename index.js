@@ -1,6 +1,5 @@
 import "dotenv/config";
 import express from "express";
-// import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
 import connectDB from "./src/config/db.js";
@@ -10,7 +9,9 @@ import eventRoutes from "./src/routes/event.routes.js";
 import subjectRoutes from "./src/routes/subject.routes.js";
 import timetableRoutes from "./src/routes/timetable.routes.js";
 import attendanceAnalyticsRoutes from "./src/routes/attendanceAnalytics.routes.js";
-// dotenv.config();
+import attendanceRecordRoutes from "./src/routes/attendanceRecord.routes.js";
+import attendanceSessionRoutes from "./src/routes/attendanceSession.routes.js";
+import attendanceQRRoutes from "./src/routes/attendanceQR.routes.js";
 
 // db calling
 connectDB();
@@ -45,6 +46,15 @@ app.use("/api/v1/timetable", timetableRoutes);
 
 //attendance-analytics-routes
 app.use("/api/v1/attendance-analytics", attendanceAnalyticsRoutes);
+
+//attendance-record-routes
+app.use("/api/v1/attendance-record", attendanceRecordRoutes);
+
+//attendance-session-routes
+app.use("/api/v1/attendance-session", attendanceSessionRoutes);
+
+//attendance-qr-routes
+app.use("/api/v1/attendance-qr", attendanceQRRoutes);
 
 //listening server
 const PORT = process.env.PORT || 5000;

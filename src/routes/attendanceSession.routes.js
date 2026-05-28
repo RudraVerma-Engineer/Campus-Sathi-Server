@@ -1,7 +1,7 @@
 import express from "express";
 
 import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
-import { authorizeRoles } from "../middlewares/role.middleware";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
 import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
 import {
   createAttendanceSessionValidationSchema,
