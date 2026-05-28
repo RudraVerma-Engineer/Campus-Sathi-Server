@@ -1,6 +1,6 @@
 import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
 import { AttendanceRecord } from "../models/attendanceRecord.model.js";
-import { AttendanceSession } from "../models/attendanceSession.model";
+import { AttendanceSession } from "../models/attendanceSession.model.js";
 import { AppError } from "../utils/AppError.js";
 
 //mark single attendance
@@ -104,7 +104,7 @@ export const bulkMarkAttendance = asyncHandler(async (req, res) => {
     success:true,
     message:"Bulk attendance marked successfully",
 
-    totalInserted : insterdRecords.length;
+    totalInserted : insertedRecords.length,
     records: insertedRecords,
   });
 });

@@ -1,10 +1,14 @@
 import express from "express";
 
-import { authUser } from "../middlewares/auth.middleware.js";
+import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
+
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
+
+import { upload } from "../middlewares/upload.middleware.js";
 import {
   approveOrRejectEvent,
   createEvent,
+  deleteEvent,
   getAllEvents,
   getEventAttendance,
   getMyEvents,
@@ -20,6 +24,8 @@ import {
   eventApprovalValidationSchema,
   updateEventValidationSchema,
 } from "../validations/event.validation.js";
+import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
 
 const router = express.Router();
 

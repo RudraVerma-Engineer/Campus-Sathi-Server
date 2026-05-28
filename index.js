@@ -9,6 +9,7 @@ import noticeRoutes from "./src/routes/notice.routes.js";
 import eventRoutes from "./src/routes/event.routes.js";
 import subjectRoutes from "./src/routes/subject.routes.js";
 import timetableRoutes from "./src/routes/timetable.routes.js";
+import attendanceAnalyticsRoutes from "./src/routes/attendanceAnalytics.routes.js";
 // dotenv.config();
 
 // db calling
@@ -40,8 +41,10 @@ app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/subject", subjectRoutes);
 
 //timetable-routes
-app.use("/api/v1/timetable",timetableRoutes);
+app.use("/api/v1/timetable", timetableRoutes);
 
+//attendance-analytics-routes
+app.use("/api/v1/attendance-analytics", attendanceAnalyticsRoutes);
 
 //listening server
 const PORT = process.env.PORT || 5000;

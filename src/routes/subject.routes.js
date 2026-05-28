@@ -1,7 +1,7 @@
 import express from "express";
-import { authorizeRoles } from "../middlewares/role.middleware";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
 
-import { authUser } from "../middlewares/auth.middleware.js";
+import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
 import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
 import {
   createSubjectValidationSchema,
@@ -42,6 +42,11 @@ router.get(
 
 // delete subject
 
-router.delete("/:subjectId", authUser, authorizeRoles("admin","superAdmin"), deleteSubject);
+router.delete(
+  "/:subjectId",
+  authUser,
+  authorizeRoles("admin", "superAdmin"),
+  deleteSubject,
+);
 
 export default router;

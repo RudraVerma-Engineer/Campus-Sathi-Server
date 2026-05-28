@@ -84,11 +84,11 @@ export const updateSubject = asyncHandler(async (req, res) => {
 
 
 // delete subject 
-export const deleteSubject = asyncHandler(async ( req, res)={
+export const deleteSubject = asyncHandler(async (req,res)=>{
     const subject = await Subject.findById(req.params.subjectId);
     if(!subject) {
         throw new AppError(404, "Subject not found");
-
+    }
         await subject.deleteOne();
 
         return res.status(200).json({
@@ -97,4 +97,4 @@ export const deleteSubject = asyncHandler(async ( req, res)={
             
         })
     }
-})
+)

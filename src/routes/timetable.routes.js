@@ -1,5 +1,5 @@
 import express from "express";
-import { authUser } from "../middlewares/auth.middleware.js";
+import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/role.middleware.js";
 import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
 import {

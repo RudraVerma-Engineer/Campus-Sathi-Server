@@ -1,6 +1,6 @@
-import { asyncHandler } from "../middlewares/asyncHandler.middleware";
-import { AttendanceRecord } from "../models/attendanceRecord.model";
-import { AttendanceSession } from "../models/attendanceSession.model";
+import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
+import { AttendanceRecord } from "../models/attendanceRecord.model.js";
+import { AttendanceSession } from "../models/attendanceSession.model.js";
 
 // student overall attendance
 export const getStudentOverallAttendance = asyncHandler(async (req, res) => {
