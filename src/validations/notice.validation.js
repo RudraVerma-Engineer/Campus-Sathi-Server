@@ -1,4 +1,5 @@
 import Joi from "joi";
+import noticeCategoryEnum from "../constants/noticeCategoryEnum.js";
 
 export const createNoticeValidationSchema = Joi.object({
   title: Joi.string().trim().max(120).required().messages({
@@ -14,6 +15,8 @@ export const createNoticeValidationSchema = Joi.object({
   isPinned: Joi.boolean().optional(),
   expiresAt: Joi.date().optional(),
   targetAudience: Joi.string().valid("students", "faculty", "all").optional(),
+  category: Joi.string().valid(...noticeCategoryEnum),
+  pinnedUntil: Joi.date().optional(),
 });
 
 export const updateNoticeValidationSchema = Joi.object({
@@ -26,8 +29,16 @@ export const updateNoticeValidationSchema = Joi.object({
   isPinned: Joi.boolean(),
   expiresAt: Joi.date(),
   targetAudience: Joi.string().valid("students", "faculty", "all"),
+  category: Joi.string().valid(...noticeCategoryEnum),
+  pinnedUntil: Joi.date(),
 });
 
 export const moderateNoticeSchema = Joi.object({
   status: Joi.string().valid("approved", "rejected").required(),
+
+  rejectionReason: Joi.when("status", {
+    is: "rejected",
+    then: Joi.string().required(),
+    otherwise: Joi.string().optional(),
+  }),
 });

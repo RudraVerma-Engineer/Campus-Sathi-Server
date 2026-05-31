@@ -262,6 +262,16 @@ export const restoreEvent = asyncHandler(async (req, res) => {
     throw new AppError(400, "Event is not deleted");
   }
 
+  // organizer/ admin check
+
+  const isOwner = event.createdBy.toString() === req.user._id.toString();
+
+  const isAdmin = ["admin", "superAdmin", "faculty"].includes(req.user.role);
+
+  if (!isOwner && !isAdmin) {
+    throw new AppError(403, "You are not allowed to mark attendance");
+  }
+
   event.isDeleted = false;
 
   await event.save();
@@ -448,12 +458,12 @@ export const markAttendance = asyncHandler(async (req, res) => {
   }
   //already marked
 
-  if (participant.attendance.marked) {
+  if (participant.attendanceMarked.marked) {
     throw new AppError(400, "Attendance already marked");
   }
 
   //mark attendance
-  participant.attendance = {
+  participant.attendanceMarked = {
     marked: true,
     markedAt: new Date(),
     markedBy: req.user._id,

@@ -2,8 +2,6 @@ import express from "express";
 
 import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
 
-import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
-
 import { upload } from "../middlewares/upload.middleware.js";
 import {
   approveOrRejectEvent,
@@ -77,7 +75,7 @@ router.delete(
 
 //register for event
 
-router.post("/register/:event", authUser, registerForEvent);
+router.post("/register/:eventId", authUser, registerForEvent);
 
 // approve / reject event
 

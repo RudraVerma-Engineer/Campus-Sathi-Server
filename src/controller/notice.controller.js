@@ -40,10 +40,10 @@ export const getAllNotices = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
   // using filter for enhancement
 
-  const filter = {};
+  const filter = { isDeleted: false };
 
   // filter for students
-  if (req.user.role === "student") {
+  if (req.user?.role === "student") {
     filter.approvalStatus = "approved";
   }
 
@@ -67,39 +67,51 @@ export const getAllNotices = asyncHandler(async (req, res) => {
     filter.priority = req.query.priority;
   }
 
-  //search
-  if (req.query.search) {
-    filter.$or = [
-      {
-        title: {
-          $regex: req.query.search,
-          $options: "i",
-        },
-      },
-      {
-        description: {
-          $regex: req.query.search,
-          $options: "i",
-        },
-      },
-    ];
+  // category filter
+  if (req.query.category) {
+    filter.category = req.query.category;
   }
+  //search
+  // if (req.query.search) {
+  //   filter.$or = [
+  //     {
+  //       title: {
+  //         $regex: req.query.search,
+  //         $options: "i",
+  //       },
+  //     },
+  //     {
+  //       description: {
+  //         $regex: req.query.search,
+  //         $options: "i",
+  //       },
+  //     },
+  //   ];
+  // }
+
+  filter.$text = {
+    $search: req.query.search,
+  };
 
   //Expired Notice Filter
 
   filter.$and = [
     {
-      expiresAt: {
-        $exists: false,
-      },
-    },
-    {
-      expiresAt: null,
-    },
-    {
-      expiresAt: {
-        $gt: new Date(),
-      },
+      $or: [
+        {
+          expiresAt: {
+            $exists: false,
+          },
+        },
+        {
+          expiresAt: null,
+        },
+        {
+          expiresAt: {
+            $gt: new Date(),
+          },
+        },
+      ],
     },
   ];
 
@@ -136,6 +148,14 @@ export const getSingleNotice = asyncHandler(async (req, res) => {
   if (!notice) {
     throw new AppError(404, "Notice not Found");
   }
+
+  if (notice.isDeleted) {
+    throw new AppError(404, "Notice not found");
+  }
+
+  notice.views += 1;
+
+  await notice.save();
 
   return res.status(200).json({
     success: true,
@@ -202,15 +222,56 @@ export const deleteNotice = asyncHandler(async (req, res) => {
     throw new AppError(403, "You are not allowed to delete this notice");
   }
 
+  if (notice.isDeleted) {
+    throw new AppError(400, "Notice already deleted");
+  }
+
+  notice.isDeleted = true;
+
+  await notice.save();
+
+  return res.status(200).json({
+    success: true,
+
+    message: "Notice deleted successfully",
+  });
+});
+
+// restore notice
+export const restoreNotice = asyncHandler(async (req, res) => {
+  const notice = await Notice.findById(req.params.noticeId);
+  if (!notice) {
+    throw new AppError(404, "Notice not found");
+  }
+
+  if (!notice.isDeleted) {
+    throw new AppError(400, "Notice is not deleted");
+  }
+
+  notice.isDeleted = false;
+  await notice.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Notice restored successfully",
+    notice,
+  });
+});
+
+// permanently delete notice
+export const permanentlyDeleteNotice = asyncHandler(async (req, res) => {
+  const notice = await Notice.findById(req.params.noticeId);
+  if (!notice) {
+    throw new AppError(404, "Notice not found");
+  }
+
   const failedFiles = await deleteFromCloudinary(notice.attachments);
 
   await notice.deleteOne();
 
   return res.status(200).json({
     success: true,
-
-    message: "Notice deleted successfully",
-
+    message: "Notice permanently deleted",
     failedFiles,
   });
 });
@@ -274,7 +335,7 @@ export const getPendingNotices = asyncHandler(async (req, res) => {
 
 export const moderateNotice = asyncHandler(async (req, res) => {
   const { noticeId } = req.params;
-  const { status } = req.body;
+  const { status, rejectionReason } = req.body;
 
   // validate status
 
@@ -297,6 +358,10 @@ export const moderateNotice = asyncHandler(async (req, res) => {
     throw new AppError(400, `Notice already ${status}`);
   }
 
+  if (status === "rejected" && !rejectionReason) {
+    throw new AppError(400, "Rejection reason required");
+  }
+
   // update status
 
   notice.approvalStatus = status;
@@ -311,12 +376,15 @@ export const moderateNotice = asyncHandler(async (req, res) => {
     notice.rejectedBy = undefined;
 
     notice.rejectedAt = undefined;
+    notice.rejectionReason = "";
   }
 
   if (status === "rejected") {
     notice.rejectedBy = req.user._id;
 
     notice.rejectedAt = new Date();
+
+    notice.rejectionReason = rejectionReason;
 
     // clear approval data
 
@@ -333,3 +401,31 @@ export const moderateNotice = asyncHandler(async (req, res) => {
     notice,
   });
 });
+
+// mark Notice as read
+export const markNoticeAsRead = asyncHandler(async (req, res) => {
+  const notice = await Notice.findById(req.params.noticeId);
+
+  if (!notice) {
+    throw new AppError(404, "Notice not found");
+  }
+
+  const alreadyRead = notice.readBy.some(
+    (item) => item.user.toString === req.user._id.toString(),
+  );
+
+  if(!alreadyRead){
+    notice.readBy.push({
+      user:req.user._id,
+    });
+
+    await notice.save();
+  }
+
+  return res.status(200).json({
+    success:true,
+    message:"Notice marked as read"
+  });
+});
+
+

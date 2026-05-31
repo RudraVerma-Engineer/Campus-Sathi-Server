@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+import noticeCategoryEnum from "../constants/noticeCategoryEnum.js";
+
 const noticeSchema = new mongoose.Schema(
   {
     title: {
@@ -87,12 +89,48 @@ const noticeSchema = new mongoose.Schema(
     rejectedAt: {
       type: Date,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
+    },
+    pinnedUntil: {
+      type: Date,
+    },
+    readBy: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        readAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    category: {
+      type: String,
+      enum: noticeCategoryEnum,
+      default: "academic",
+    },
   },
   {
     timestamps: true,
   },
 );
 
+noticeSchema.index({
+  title:"text",
+  description:"text",
+})
 noticeSchema.index({
   department: 1,
 });

@@ -47,7 +47,7 @@ router.post(
 router.post("/logout", authMiddleware, logoutUser);
 
 //get details of profile router
-router.get("profile", authMiddleware, getProfile);
+router.get("/profile", authMiddleware, getProfile);
 
 //update profile routes
 router.patch(
