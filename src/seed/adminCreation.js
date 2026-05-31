@@ -4,10 +4,7 @@ import { User } from "../models/user.model.js";
 
 const createSuperAdmin = async () => {
   try {
-    await mongoose.connect(
-      "mongodb+srv://campussathiserver:campussathiuE3*T4nB@campussathi.uaripxh.mongodb.net/",
-    );
-
+    await mongoose.connect(process.env.MONGO_URL);
     const existing = await User.findOne({
       role: "superAdmin",
     });
