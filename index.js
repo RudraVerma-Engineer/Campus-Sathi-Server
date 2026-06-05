@@ -12,6 +12,9 @@ import attendanceAnalyticsRoutes from "./src/routes/attendanceAnalytics.routes.j
 import attendanceRecordRoutes from "./src/routes/attendanceRecord.routes.js";
 import attendanceSessionRoutes from "./src/routes/attendanceSession.routes.js";
 import attendanceQRRoutes from "./src/routes/attendanceQR.routes.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/config/swagger.js";
+import docsRoutes from "./src/routes/docs.routes.js";
 
 // db calling
 connectDB();
@@ -25,9 +28,27 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 //routes
-app.get("/", (req, res) => {
-  res.send("Campus sathi API running");
-});
+// app.get("/", (req, res) => {
+  //   res.send("Campus sathi API running");
+  // });
+  
+  app.get("/", (req, res) => {
+    res.json({
+      project: "Campus Sathi API",
+      version: "1.0.0",
+      status: "Running",
+      
+      links: {
+        docs: "/docs",
+        swagger: "/swagger",
+      },
+    });
+  });
+  
+  
+app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// docs routes
+app.use("/docs", docsRoutes);
 
 // user-routes
 app.use("/api/v1/auth", authRoutes);
