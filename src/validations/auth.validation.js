@@ -63,7 +63,7 @@ export const registerValidationSchema = Joi.object({
       "string.empty": "Department is required",
     }),
 
-  semester: Joi.number().strict().min(1).max(8).required().messages({
+  semester: Joi.number().min(1).max(8).required().messages({
     "number.base": "Semester must be a number",
     "number.min": "Semester must be at least 1",
     "number.max": "Semester cannot exceed 8",

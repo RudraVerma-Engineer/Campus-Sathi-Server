@@ -5,7 +5,12 @@ import { sendEmail } from "../utils/sendEmail.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 // register user
 export const registerUser = asyncHandler(async (req, res) => {
+  if (req.body?.fullname) {
+    req.body.fullname = JSON.parse(req.body.fullname);
+  }
+
   const {
+    fullname,
     username,
     email,
     password,
@@ -25,11 +30,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   if (existingUser) {
     throw new AppError(409, "User already exists");
   }
-
-  const fullname =
-    typeof req.body.fullname === "string"
-      ? JSON.parse(req.body.fullname)
-      : req.body.fullname;
 
   let profilePhotoUrl;
   if (req.file) {
