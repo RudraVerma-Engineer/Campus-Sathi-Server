@@ -1,12 +1,11 @@
 import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
 import { User } from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
-import bcrypt from "bcrypt";
 import { sendEmail } from "../utils/sendEmail.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 // register user
 export const registerUser = asyncHandler(async (req, res) => {
   const {
-    fullname,
     username,
     email,
     password,
@@ -27,6 +26,20 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new AppError(409, "User already exists");
   }
 
+  const fullname =
+    typeof req.body.fullname === "string"
+      ? JSON.parse(req.body.fullname)
+      : req.body.fullname;
+
+  let profilePhotoUrl;
+  if (req.file) {
+    const uploadedFiles = await uploadToCloudinary(
+      [req.file],
+      "campus-sathi/profile-images",
+    );
+
+    profilePhotoUrl = uploadedFiles[0]?.url;
+  }
   //create user
 
   const user = await User.create({
@@ -43,6 +56,8 @@ export const registerUser = asyncHandler(async (req, res) => {
     batchYear,
     // always default
     role: "student",
+
+    profilePhoto: profilePhotoUrl,
   });
 
   // generate Token
@@ -307,8 +322,8 @@ export const createAdmin = asyncHandler(async (req, res) => {
     isVerified: true,
   });
   return res.status(201).json({
-    success:true,
-    message:"Admin created successfully",
-    admin
-  })
+    success: true,
+    message: "Admin created successfully",
+    admin,
+  });
 });

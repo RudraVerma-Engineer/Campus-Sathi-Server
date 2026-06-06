@@ -22,6 +22,7 @@ import {
   verifyOTPvalidationSchema,
 } from "../validations/auth.validation.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
@@ -184,6 +185,7 @@ const router = express.Router();
  */
 router.post(
   "/register",
+  upload.single("profilePhoto"),
   validationMiddlewareFactory(registerValidationSchema),
   registerUser,
 );
