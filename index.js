@@ -1,3 +1,5 @@
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -29,23 +31,22 @@ app.use(express.urlencoded({ extended: true }));
 
 //routes
 // app.get("/", (req, res) => {
-  //   res.send("Campus sathi API running");
-  // });
-  
-  app.get("/", (req, res) => {
-    res.json({
-      project: "Campus Sathi API",
-      version: "1.0.0",
-      status: "Running",
-      
-      links: {
-        docs: "/docs",
-        swagger: "/swagger",
-      },
-    });
+//   res.send("Campus sathi API running");
+// });
+
+app.get("/", (req, res) => {
+  res.json({
+    project: "Campus Sathi API",
+    version: "1.0.0",
+    status: "Running",
+
+    links: {
+      docs: "/docs",
+      swagger: "/swagger",
+    },
   });
-  
-  
+});
+
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // docs routes
 app.use("/docs", docsRoutes);
