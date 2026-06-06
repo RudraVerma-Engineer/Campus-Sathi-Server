@@ -84,7 +84,7 @@ export const registerValidationSchema = Joi.object({
   interests: Joi.array().items(Joi.string().trim()).optional(),
 
   subjects: Joi.array().items(Joi.string().trim()).optional(),
-}).unknown(false);
+}).unknown(true);
 
 //login validation Schema
 

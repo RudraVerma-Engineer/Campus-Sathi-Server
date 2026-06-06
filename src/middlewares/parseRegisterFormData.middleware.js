@@ -1,6 +1,7 @@
 export const parseRegisterFormData = (req, res, next) => {
   try {
-    if (req.body.fullname) {
+    // Parse fullname from JSON string back to object
+    if (req.body.fullname && typeof req.body.fullname === "string") {
       req.body.fullname = JSON.parse(req.body.fullname);
     }
 
