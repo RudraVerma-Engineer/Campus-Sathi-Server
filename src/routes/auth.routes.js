@@ -23,6 +23,7 @@ import {
 } from "../validations/auth.validation.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
+import { parseRegisterFormData } from "../middlewares/parseRegisterFormData.middleware.js";
 
 const router = express.Router();
 
@@ -186,6 +187,7 @@ const router = express.Router();
 router.post(
   "/register",
   upload.single("profilePhoto"),
+  parseRegisterFormData,
   validationMiddlewareFactory(registerValidationSchema),
   registerUser,
 );
