@@ -1,0 +1,55 @@
+import express from "express";
+import { authorizeRoles } from "../middlewares/role.middleware.js";
+
+import { authMiddleware as authUser } from "../middlewares/auth.middleware.js";
+import { validationMiddlewareFactory } from "../middlewares/validationMiddlewareFactory.js";
+import {
+  createSubjectValidationSchema,
+  updateSubjectValidationSchema,
+} from "../validations/subject.validation.js";
+
+import {
+  createSubject,
+  deleteSubject,
+  getAllSubjects,
+  getSingleSubject,
+  updateSubject,
+} from "../controller/subject.controller.js";
+
+const router = express.Router();
+
+//create subject router
+router.post(
+  "/create",
+  authUser,
+  authorizeRoles("admin", "superAdmin", "faculty"),
+  validationMiddlewareFactory(createSubjectValidationSchema),
+  createSubject,
+);
+
+// get all subjects
+
+router.get("/", authUser, getAllSubjects);
+
+// get single subject
+router.get("/:subjectId", authUser, getSingleSubject);
+
+// update subject
+router.patch(
+  "/:subjectId",
+  authUser,
+  authorizeRoles("admin", "superAdmin", "faculty"),
+  validationMiddlewareFactory(updateSubjectValidationSchema),
+  updateSubject,
+);
+
+// delete subject
+
+router.delete(
+  "/:subjectId",
+  authUser,
+  authorizeRoles("admin", "superAdmin"),
+  deleteSubject,
+);
+
+export default router;
